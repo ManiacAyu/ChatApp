@@ -28,7 +28,7 @@ const CheckEmailPage = () => {
     e.stopPropagation();
     console.log(process.env.REACT_APP_BACKEND_URL);
 
-    const URL = `${process.env.REACT_APP_BACKEND_URL}api/email`;
+    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/email`;
 
     try {
       const response = await axios.post(URL, data);
