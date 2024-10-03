@@ -28,8 +28,8 @@ const RegisterPage = () => {
 
   const handleUploadPhoto = async(e)=>{
     const file = e.target.files[0]
-
-    const uploadPhoto = await uploadFile(file)
+    console.log(file);
+    const uploadPhoto = await uploadFile(file);
 
     setUploadPhoto(file)
 
@@ -50,7 +50,7 @@ const RegisterPage = () => {
     e.preventDefault()
     e.stopPropagation()
 
-    const URL = `${process.env.REACT_APP_BACKEND_URL}/api/register`
+    const URL = `${process.env.REACT_APP_BACKEND_URL}api/register`
 
     try {
         const response = await axios.post(URL,data)
@@ -70,6 +70,7 @@ const RegisterPage = () => {
 
         }
     } catch (error) {
+      console.log(error);
         toast.error(error?.response?.data?.message)
     }
     console.log('data',data)
