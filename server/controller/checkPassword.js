@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 
 async function checkPassword(request, response) {
   try {
+    console.log("Ayush");
     const { password, userId } = request.body;
 
     const user = await UserModel.findById(userId);
