@@ -8,7 +8,7 @@ import { PiUserCircle } from "react-icons/pi";
 
 const CheckEmailPage = () => {
   const [data, setData] = useState({
-    email: "test@test.com",
+    email: "youtest1@gmail.com",
   });
   const navigate = useNavigate();
 
@@ -26,15 +26,14 @@ const CheckEmailPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log(process.env.REACT_APP_BACKEND_URL);
 
     const URL = `${process.env.REACT_APP_BACKEND_URL}/api/email`;
-
+  
     try {
       const response = await axios.post(URL, data);
-
+      console.log(response);
       toast.success(response.data.message);
-
+      
       if (response.data.success) {
         setData({
           email: "",

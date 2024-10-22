@@ -1,17 +1,18 @@
 const UserModel = require("../models/UserModel");
 
 async function checkEmail(request, response) {
+  console.log("Email Endpoint");
   try {
     const { email } = request.body;
 
     const checkEmail = await UserModel.findOne({ email }).select("-password");
-    //console.log(checkEmail);
+    console.log(checkEmail);
     if (!checkEmail) {
       return response.status(400).json({
-        message: "user does not exists",
+        message: "user not exit",
         error: true,
       });
-    } 
+    }
 
     return response.status(200).json({
       message: "email verify",

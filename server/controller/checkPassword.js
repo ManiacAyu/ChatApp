@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 
 async function checkPassword(request, response) {
   try {
-    console.log("Ayush");
     const { password, userId } = request.body;
 
     const user = await UserModel.findById(userId);
@@ -25,11 +24,12 @@ async function checkPassword(request, response) {
     const token = jwt.sign(tokenData, process.env.JWT_SECREAT_KEY, {
       expiresIn: "1d",
     });
-    console.log("token", token);
+    
     const cookieOptions = {
-      http: true,
+      httpOnly : true,
       secure: true,
-      sameSite: "None",
+      sameSite: 'None',
+      maxAge: 60 * 60 * 24 * 1000, // 1 day in milliseconds  // 24 hours * 60 minutes * 60 seconds * 1000 milliseconds = 86,400,000 milliseconds
     };
 
     return response.cookie("token", token, cookieOptions).status(200).json({

@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -17,35 +17,49 @@ const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  const [loading, setLoading] = useState(true); // Add loading state
 
-  console.log("user", user);
   const fetchUserDetails = async () => {
     try {
+      console.log(document.cookie);
       const URL = `${process.env.REACT_APP_BACKEND_URL}/api/user-details`;
       const response = await axios({
         method: "GET",
         url: URL,
         withCredentials: true,
       });
-
+      
       dispatch(setUser(response.data.data));
-      console.log(response);
+      
       if (response.data.data.logout) {
         dispatch(logout());
         navigate("/email");
       }
-      console.log("current user Details", response);
+      
     } catch (error) {
-      console.log("error", error);
+      console.error("Error fetching user details:", error);
+    } finally {
+      setLoading(false); // Stop loading regardless of success or failure
     }
   };
 
   useEffect(() => {
-    fetchUserDetails();
+    if (!localStorage["token"]) {
+      navigate("/email");
+    } else {
+      fetchUserDetails(); // Fetch user details only if the token is present
+    }
   }, []);
 
-  /***socket connection */
+  /*** Socket connection ***/
   useEffect(() => {
+    if (!localStorage["token"]) {
+      console.log("Navigating to email due to missing token");
+      navigate("/email");
+      return; // Exit early if there's no token
+    }
+    
     const socketConnection = io(process.env.REACT_APP_BACKEND_URL, {
       auth: {
         token: localStorage.getItem("token"),
@@ -53,7 +67,6 @@ const Home = () => {
     });
 
     socketConnection.on("onlineUser", (data) => {
-      console.log(data);
       dispatch(setOnlineUser(data));
     });
 
@@ -65,13 +78,19 @@ const Home = () => {
   }, []);
 
   const basePath = location.pathname === "/";
+  
+  // If loading, display a loading message or spinner
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="grid lg:grid-cols-[300px,1fr] h-screen max-h-screen">
       <section className={`bg-white ${!basePath && "hidden"} lg:block`}>
         <Sidebar />
       </section>
 
-      {/**message component**/}
+      {/** Message component **/}
       <section className={`${basePath && "hidden"}`}>
         <Outlet />
       </section>

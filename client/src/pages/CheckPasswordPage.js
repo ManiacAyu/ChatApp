@@ -11,7 +11,7 @@ import { setToken, setUser } from "../redux/userSlice";
 
 const CheckPasswordPage = () => {
   const [data, setData] = useState({
-    password: "test@123",
+    password: "You@123",
     userId: "",
   });
   const navigate = useNavigate();
@@ -38,7 +38,6 @@ const CheckPasswordPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     const URL = `${process.env.REACT_APP_BACKEND_URL}/api/password`;
 
     try {
@@ -52,20 +51,23 @@ const CheckPasswordPage = () => {
         withCredentials: true,
       });
 
-      if (!response.data || !response.data.token)
+      if (!response.data || !response.data.token) {
         return toast.error("Error in logging in your account");
+      }
+
       toast.success(response.data.message);
+
       if (response.data.success) {
+        // Set token in Redux and localStorage
         dispatch(setToken(response.data.token));
         localStorage.setItem("token", response.data.token);
 
-        setData({
-          password: "",
-        });
-        navigate("/");
+        setData({ password: "" });
+          navigate("/");
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      toast.error(error?.message);
+      navigate("/email");
     }
   };
 

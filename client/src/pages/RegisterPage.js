@@ -28,8 +28,8 @@ const RegisterPage = () => {
 
   const handleUploadPhoto = async(e)=>{
     const file = e.target.files[0]
-    console.log(file);
-    const uploadPhoto = await uploadFile(file);
+
+    const uploadPhoto = await uploadFile(file)
 
     setUploadPhoto(file)
 
@@ -54,7 +54,7 @@ const RegisterPage = () => {
 
     try {
         const response = await axios.post(URL,data)
-        console.log("response",response)
+        
 
         toast.success(response.data.message)
 
@@ -70,10 +70,9 @@ const RegisterPage = () => {
 
         }
     } catch (error) {
-      console.log(error);
         toast.error(error?.response?.data?.message)
     }
-    console.log('data',data)
+    
   }
 
 

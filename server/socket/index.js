@@ -15,7 +15,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin : process.env.FRONTEND_URL,
     credentials: true,
   },
 });
@@ -26,9 +26,10 @@ const io = new Server(server, {
 
 //online user
 const onlineUser = new Set();
+const map = new Map();
 
 io.on("connection", async (socket) => {
-  console.log("connect User ", socket.id);
+  
 
   const token = socket.handshake.auth.token;
 
@@ -42,16 +43,16 @@ io.on("connection", async (socket) => {
   io.emit("onlineUser", Array.from(onlineUser));
 
   socket.on("message-page", async (userId) => {
-    console.log("userId", userId);
+    
     const userDetails = await UserModel.findById(userId).select("-password");
-
+    map[user?._id?.toString()] = userId.toString();
     const payload = {
       _id: userDetails?._id,
       name: userDetails?.name,
       email: userDetails?.email,
       profile_pic: userDetails?.profile_pic,
       online: onlineUser.has(userId),
-    };
+    }
     socket.emit("message-user", payload);
 
     //get previous message
@@ -87,12 +88,29 @@ io.on("connection", async (socket) => {
       conversation = await createConversation.save();
     }
 
-    const message = new MessageModel({
-      text: data.text,
-      imageUrl: data.imageUrl,
-      videoUrl: data.videoUrl,
-      msgByUserId: data?.msgByUserId,
-    });
+    let message = null;
+    const receiver = data?.receiver?.toString();
+    console.log(map);
+    console.log(typeof receiver);
+    if (receiver && (onlineUser.has(receiver)) && map[receiver] && (data?.sender) && (map[receiver] === data?.sender?.toString())) {
+      message = await MessageModel({
+        text: data.text,
+        imageUrl: data.imageUrl,
+        videoUrl: data.videoUrl,
+        msgByUserId: data?.msgByUserId,
+        seen: true,
+      });
+    }
+    else {
+      
+      message = await MessageModel({
+        text: data.text,
+        imageUrl: data.imageUrl,
+        videoUrl: data.videoUrl,
+        msgByUserId: data?.msgByUserId,
+      });
+    }
+    console.log(message);
     const saveMessage = await message.save();
 
     const updateConversation = await ConversationModel.updateOne(
@@ -112,10 +130,15 @@ io.on("connection", async (socket) => {
       .sort({ updatedAt: -1 });
 
     io.to(data?.sender).emit("message", getConversationMessage?.messages || []);
-    io.to(data?.receiver).emit(
-      "message",
-      getConversationMessage?.messages || []
-    );
+    //const receiver = data?.receiver?.toString();
+    console.log(map);
+    console.log(typeof receiver);
+    if (receiver && (onlineUser.has(receiver)) && map[receiver] && (data?.sender) && (map[receiver] === data?.sender?.toString())){ 
+      io.to(data?.receiver).emit(
+        "message",
+        getConversationMessage?.messages || []
+      );
+    }
 
     //send conversation
     const conversationSender = await getConversation(data?.sender);
@@ -127,7 +150,7 @@ io.on("connection", async (socket) => {
 
   //sidebar
   socket.on("sidebar", async (currentUserId) => {
-    console.log("current user", currentUserId);
+    
 
     const conversation = await getConversation(currentUserId);
 
@@ -160,7 +183,7 @@ io.on("connection", async (socket) => {
   //disconnect
   socket.on("disconnect", () => {
     onlineUser.delete(user?._id?.toString());
-    console.log("disconnect user ", socket.id);
+    map.delete(user?._id?.toString());
   });
 });
 
