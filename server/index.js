@@ -13,8 +13,15 @@ app.use(
   cors({
     origin : "https://chat-app-git-main-maniacayus-projects.vercel.app",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
   })
 );
+
+app.options("*", cors({
+  origin: "https://chat-app-git-main-maniacayus-projects.vercel.app",
+  credentials: true,
+}));
+
 
 app.use(express.json());
 app.use(cookiesParser());
