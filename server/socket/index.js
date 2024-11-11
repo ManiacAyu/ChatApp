@@ -10,17 +10,31 @@ const {
 const getConversation = require("../helpers/getConversation");
 
 const app = express();
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://chat-app-git-main-maniacayus-projects.vercel.app"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  // Handle preflight requests for complex CORS requests
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 /***socket connection */
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin : "https://chat-app-git-main-maniacayus-projects.vercel.app",
+    origin: "https://chat-app-git-main-maniacayus-projects.vercel.app",
     credentials: true,
   },
 });
-
-
 
 /***
  * socket running at http://localhost:8080/
@@ -31,8 +45,6 @@ const onlineUser = new Set();
 const map = new Map();
 
 io.on("connection", async (socket) => {
-  
-
   const token = socket.handshake.auth.token;
 
   //current user details
@@ -45,7 +57,6 @@ io.on("connection", async (socket) => {
   io.emit("onlineUser", Array.from(onlineUser));
 
   socket.on("message-page", async (userId) => {
-    
     const userDetails = await UserModel.findById(userId).select("-password");
     map[user?._id?.toString()] = userId.toString();
     const payload = {
@@ -54,7 +65,7 @@ io.on("connection", async (socket) => {
       email: userDetails?.email,
       profile_pic: userDetails?.profile_pic,
       online: onlineUser.has(userId),
-    }
+    };
     socket.emit("message-user", payload);
 
     //get previous message
@@ -94,7 +105,13 @@ io.on("connection", async (socket) => {
     const receiver = data?.receiver?.toString();
     console.log(map);
     console.log(typeof receiver);
-    if (receiver && (onlineUser.has(receiver)) && map[receiver] && (data?.sender) && (map[receiver] === data?.sender?.toString())) {
+    if (
+      receiver &&
+      onlineUser.has(receiver) &&
+      map[receiver] &&
+      data?.sender &&
+      map[receiver] === data?.sender?.toString()
+    ) {
       message = await MessageModel({
         text: data.text,
         imageUrl: data.imageUrl,
@@ -102,9 +119,7 @@ io.on("connection", async (socket) => {
         msgByUserId: data?.msgByUserId,
         seen: true,
       });
-    }
-    else {
-      
+    } else {
       message = await MessageModel({
         text: data.text,
         imageUrl: data.imageUrl,
@@ -135,7 +150,13 @@ io.on("connection", async (socket) => {
     //const receiver = data?.receiver?.toString();
     console.log(map);
     console.log(typeof receiver);
-    if (receiver && (onlineUser.has(receiver)) && map[receiver] && (data?.sender) && (map[receiver] === data?.sender?.toString())){ 
+    if (
+      receiver &&
+      onlineUser.has(receiver) &&
+      map[receiver] &&
+      data?.sender &&
+      map[receiver] === data?.sender?.toString()
+    ) {
       io.to(data?.receiver).emit(
         "message",
         getConversationMessage?.messages || []
@@ -152,8 +173,6 @@ io.on("connection", async (socket) => {
 
   //sidebar
   socket.on("sidebar", async (currentUserId) => {
-    
-
     const conversation = await getConversation(currentUserId);
 
     socket.emit("conversation", conversation);
